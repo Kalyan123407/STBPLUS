@@ -1,0 +1,54 @@
+name: StreamFlex19 | JioTV+ Auto Fetcher
+
+on:
+  schedule:
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install
+        run: pip install requests
+
+      - name: 🚀 Fetch
+        env:
+          JIOTV_TOKEN:      ${{ secrets.JIOTV_TOKEN }}
+          CLEARKEY_URL:     ${{ secrets.CLEARKEY_URL }}
+          JIO_API_BASE:     ${{ secrets.JIO_API_BASE }}
+          JIO_SUB_ID:       ${{ secrets.JIO_SUB_ID }}
+          JIO_RMN:          ${{ secrets.JIO_RMN }}
+          JIO_API_SIG:      ${{ secrets.JIO_API_SIG }}
+          JIO_FEATURE_CODE: ${{ secrets.JIO_FEATURE_CODE }}
+        run: python fetch_channels.py
+
+      - name: 📊 Summary
+        run: |
+          python3 -c "
+          import json
+          d = json.load(open('streamflex_channels.json'))
+          print(f'Watermark : {d[\"_watermark\"]}')
+          print(f'Generated : {d[\"_generated_at\"]}')
+          print(f'Success   : {d[\"_success\"]} / {d[\"_total_requested\"]}')
+          "
+
+      - name: 💾 Push
+        run: |
+          git config user.name "StreamFlex19-Bot"
+          git config user.email "streamflex19@users.noreply.github.com"
+          git add streamflex_fresh.m3u streamflex_channels.json
+          git diff --cached --quiet || git commit -m "🔄 $(date -u '+%Y-%m-%d %H:%M UTC') | @StreamFlex19"
+          git push
