@@ -25,6 +25,17 @@ JIO_RMN = os.environ.get('JIO_RMN', '')
 JIO_API_SIG = os.environ.get('JIO_API_SIG', '')
 JIO_FEATURE_CODE = os.environ.get('JIO_FEATURE_CODE', '')
 
+# ── DEBUG: Check if secrets are loaded ──────────────────────────────────
+print("=== DEBUG: Checking Secrets ===")
+print(f"JIOTV_TOKEN set: {'Yes' if ACCESS_TOKEN else 'NO!'}")
+print(f"CLEARKEY_URL: {CLEARKEY_URL}")
+print(f"JIO_API_BASE: {JIO_API_BASE}")
+print(f"JIO_SUB_ID: {JIO_SUB_ID}")
+print(f"JIO_RMN set: {'Yes' if JIO_RMN else 'NO!'}")
+print(f"JIO_API_SIG set: {'Yes' if JIO_API_SIG else 'NO!'}")
+print(f"JIO_FEATURE_CODE set: {'Yes' if JIO_FEATURE_CODE else 'NO!'}")
+print("==============================")
+
 # ── CHECK: Sab kuch set hona chahiye ──────────────────────────────────────
 MISSING = []
 if not ACCESS_TOKEN: MISSING.append('JIOTV_TOKEN')
