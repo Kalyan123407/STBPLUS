@@ -33,10 +33,24 @@ jobs:
           JIO_FEATURE_CODE: ${{ secrets.JIO_FEATURE_CODE }}
         run: python debug.py
 
-      - name: 📊 Show Result
+      - name: 📊 Show Output
         if: always()
         run: |
           echo "=========================================="
-          echo "🔍 DEBUG RESULTS:"
+          echo "🔍 DEBUG OUTPUT:"
           echo "=========================================="
-          cat debug_output.txt 2>/dev/null || echo "No output file"
+          cat debug_output.txt || echo "No output file"
+          echo ""
+          echo "=========================================="
+          echo "📊 RESULT JSON:"
+          echo "=========================================="
+          cat debug_result.json || echo "No result file"
+
+      - name: 💾 Upload Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-results
+          path: |
+            debug_output.txt
+            debug_result.json
