@@ -1,15 +1,3 @@
-# ── DEBUG: Check if secrets are loaded ──────────────────────────────────
-print("=== DEBUG: Checking Secrets ===")
-print(f"JIOTV_TOKEN set: {'Yes' if ACCESS_TOKEN else 'NO!'}")
-print(f"CLEARKEY_URL: {CLEARKEY_URL}")
-print(f"JIO_API_BASE: {JIO_API_BASE}")
-print(f"JIO_SUB_ID: {JIO_SUB_ID}")
-print(f"JIO_RMN set: {'Yes' if JIO_RMN else 'NO!'}")
-print(f"JIO_API_SIG set: {'Yes' if JIO_API_SIG else 'NO!'}")
-print(f"JIO_FEATURE_CODE set: {'Yes' if JIO_FEATURE_CODE else 'NO!'}")
-print("==============================")
-
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
