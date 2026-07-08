@@ -1,0 +1,38 @@
+name: Auto Fetch JioTV Channels
+
+on:
+  schedule:
+    # Har 5 hours mein run hoga
+    - cron: '0 */5 * * *'
+  workflow_dispatch:  # Manual run ke liye
+
+jobs:
+  fetch-channels:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install Dependencies
+      run: |
+        pip install requests
+    
+    - name: Run Fetcher Script
+      run: |
+        python streamflex_final.py
+    
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.email "Rangbaazkalyan@gmail.com"
+        git config --global user.name "Kalyan123407"
+        git add streamflex_fresh.m3u streamflex_channels.json
+        git commit -m "Auto update: $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+        git push -f origin main
