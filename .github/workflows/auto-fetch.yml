@@ -1,38 +1,58 @@
-name: Auto Fetch JioTV Channels
+name: StreamFlex19 | JioTV+ Auto Fetcher
 
 on:
   schedule:
-    # Har 5 hours mein run hoga
     - cron: '0 */5 * * *'
-  workflow_dispatch:  # Manual run ke liye
+  workflow_dispatch:
 
 jobs:
-  fetch-channels:
+  fetch:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 60
+    permissions:
+      contents: write
+
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    
-    - name: Install Dependencies
-      run: |
-        pip install requests
-    
-    - name: Run Fetcher Script
-      run: |
-        python streamflex_final.py
-    
-    - name: Commit and Push Changes
-      run: |
-        git config --global user.email "Rangbaazkalyan@gmail.com"
-        git config --global user.name "Kalyan123407"
-        git add streamflex_fresh.m3u streamflex_channels.json
-        git commit -m "Auto update: $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-        git push -f origin main
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install
+        run: pip install requests
+
+      - name: 🚀 Fetch
+        env:
+          JIOTV_TOKEN:      ${{ secrets.JIOTV_TOKEN }}
+          CLEARKEY_URL:     ${{ secrets.CLEARKEY_URL }}
+          JIO_API_BASE:     ${{ secrets.JIO_API_BASE }}
+          JIO_SUB_ID:       ${{ secrets.JIO_SUB_ID }}
+          JIO_RMN:          ${{ secrets.JIO_RMN }}
+          JIO_API_SIG:      ${{ secrets.JIO_API_SIG }}
+          JIO_FEATURE_CODE: ${{ secrets.JIO_FEATURE_CODE }}
+        run: python fetch_channels.py
+
+      - name: 📊 Summary
+        run: |
+          python3 -c "
+          import json
+          try:
+            d = json.load(open('streamflex_channels.json'))
+            print(f'Watermark : {d.get(\"watermark\", \"N/A\")}')
+            print(f'Generated : {d.get(\"generated_at\", \"N/A\")}')
+            print(f'Success   : {d.get(\"success\", 0)} / {d.get(\"total_requested\", 0)}')
+            print(f'Failed    : {d.get(\"failed\", 0)}')
+          except:
+            print('⚠️  JSON file not found or invalid')
+          "
+
+      - name: 💾 Push
+        run: |
+          git config user.name "StreamFlex19-Bot"
+          git config user.email "streamflex19@users.noreply.github.com"
+          git add streamflex_fresh.m3u streamflex_channels.json
+          git diff --cached --quiet || git commit -m "🔄 Auto update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
