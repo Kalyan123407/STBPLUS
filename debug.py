@@ -9,6 +9,7 @@ import os
 import requests
 import json
 import sys
+from datetime import datetime
 
 # ── ALL VALUES FROM GITHUB SECRETS ──────────────────────────────────────────
 ACCESS_TOKEN = os.environ.get('JIOTV_TOKEN', '')
@@ -23,19 +24,33 @@ JIO_FEATURE_CODE = os.environ.get('JIO_FEATURE_CODE', '')
 CHANNEL_ID = 301709
 UA = "JioTV.Plus/2.3.1_2041 (Linux;Android 14) AndroidXMedia3/1.4.0"
 
-print("=" * 60)
-print("🔍 STREAMFLEX19 | DEBUG SINGLE CHANNEL TEST")
-print("=" * 60)
+# ── OUTPUT FILE ──────────────────────────────────────────────────────────
+OUTPUT_FILE = "debug_output.txt"
+
+def log(msg):
+    """Write to both console and file"""
+    print(msg)
+    with open(OUTPUT_FILE, 'a', encoding='utf-8') as f:
+        f.write(msg + '\n')
+
+# ── CLEAR OUTPUT FILE ──────────────────────────────────────────────────────
+with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+    f.write("")
+
+log("=" * 60)
+log("🔍 STREAMFLEX19 | DEBUG SINGLE CHANNEL TEST")
+log(f"📅 Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+log("=" * 60)
 
 # ── CHECK SECRETS ──────────────────────────────────────────────────────────
-print("\n📌 CHECKING SECRETS:")
-print(f"  JIOTV_TOKEN     : {'✅ SET' if ACCESS_TOKEN else '❌ MISSING'} (length: {len(ACCESS_TOKEN) if ACCESS_TOKEN else 0})")
-print(f"  CLEARKEY_URL    : {CLEARKEY_URL if CLEARKEY_URL else '❌ MISSING'}")
-print(f"  JIO_API_BASE    : {JIO_API_BASE if JIO_API_BASE else '❌ MISSING'}")
-print(f"  JIO_SUB_ID      : {JIO_SUB_ID if JIO_SUB_ID else '❌ MISSING'}")
-print(f"  JIO_RMN         : {'✅ SET' if JIO_RMN else '❌ MISSING'}")
-print(f"  JIO_API_SIG     : {'✅ SET' if JIO_API_SIG else '❌ MISSING'}")
-print(f"  JIO_FEATURE_CODE: {'✅ SET' if JIO_FEATURE_CODE else '❌ MISSING'}")
+log("\n📌 CHECKING SECRETS:")
+log(f"  JIOTV_TOKEN     : {'✅ SET' if ACCESS_TOKEN else '❌ MISSING'} (length: {len(ACCESS_TOKEN) if ACCESS_TOKEN else 0})")
+log(f"  CLEARKEY_URL    : {CLEARKEY_URL if CLEARKEY_URL else '❌ MISSING'}")
+log(f"  JIO_API_BASE    : {JIO_API_BASE if JIO_API_BASE else '❌ MISSING'}")
+log(f"  JIO_SUB_ID      : {JIO_SUB_ID if JIO_SUB_ID else '❌ MISSING'}")
+log(f"  JIO_RMN         : {'✅ SET' if JIO_RMN else '❌ MISSING'}")
+log(f"  JIO_API_SIG     : {'✅ SET' if JIO_API_SIG else '❌ MISSING'}")
+log(f"  JIO_FEATURE_CODE: {'✅ SET' if JIO_FEATURE_CODE else '❌ MISSING'}")
 
 # ── CHECK MISSING ──────────────────────────────────────────────────────────
 MISSING = []
@@ -48,14 +63,17 @@ if not JIO_API_SIG: MISSING.append('JIO_API_SIG')
 if not JIO_FEATURE_CODE: MISSING.append('JIO_FEATURE_CODE')
 
 if MISSING:
-    print(f"\n❌ MISSING SECRETS: {', '.join(MISSING)}")
+    log(f"\n❌ MISSING SECRETS: {', '.join(MISSING)}")
+    log("\n" + "=" * 60)
+    log("🔍 DEBUG COMPLETE - FAILED")
+    log("=" * 60)
     sys.exit(1)
 
-print("\n✅ All secrets loaded successfully!")
+log("\n✅ All secrets loaded successfully!")
 
 # ── TEST API CALL ──────────────────────────────────────────────────────────
-print(f"\n📡 TESTING CHANNEL: {CHANNEL_ID}")
-print("-" * 60)
+log(f"\n📡 TESTING CHANNEL: {CHANNEL_ID}")
+log("-" * 60)
 
 url = f"{JIO_API_BASE}/playback/v2/{CHANNEL_ID}"
 headers = {
@@ -88,35 +106,86 @@ payload = {
     'drmSupport': 'widevine',
 }
 
-print(f"🌐 URL: {url}")
-print(f"📤 Headers: {json.dumps({k: v[:20]+'...' if k in ['x-accesstoken', 'rmn'] and len(v) > 20 else v for k, v in headers.items()}, indent=2)}")
-print(f"📤 Payload: {json.dumps(payload, indent=2)}")
+log(f"🌐 URL: {url}")
+
+# Mask sensitive data
+safe_headers = {}
+for k, v in headers.items():
+    if k in ['x-accesstoken', 'rmn'] and len(v) > 10:
+        safe_headers[k] = v[:10] + '...' + v[-5:]
+    else:
+        safe_headers[k] = v
+log(f"📤 Headers: {json.dumps(safe_headers, indent=2)}")
+log(f"📤 Payload: {json.dumps(payload, indent=2)}")
 
 try:
-    print("\n⏳ Sending request...")
+    log("\n⏳ Sending request...")
     response = requests.post(url, headers=headers, json=payload, timeout=15)
     
-    print(f"\n📥 RESPONSE STATUS: {response.status_code}")
+    log(f"\n📥 RESPONSE STATUS: {response.status_code}")
     
     if response.status_code == 200:
-        print("✅ SUCCESS! Channel found!")
+        log("✅ SUCCESS! Channel found!")
         data = response.json()
         pb = data.get('data', data)
         name = pb.get('name', 'Unknown')
         mpd = (pb.get('mpd') or {}).get('auto', 'Not found')
-        print(f"\n📺 Channel Name: {name}")
-        print(f"📁 MPD URL: {mpd[:100]}..." if len(mpd) > 100 else f"📁 MPD URL: {mpd}")
-        print("\n✅ DEBUG COMPLETE - CHANNEL WORKING!")
-        print(f"\n✅ SUCCESS! Channel {CHANNEL_ID} is working!")
+        log(f"\n📺 Channel Name: {name}")
+        log(f"📁 MPD URL: {mpd[:100]}..." if len(mpd) > 100 else f"📁 MPD URL: {mpd}")
+        log("\n✅ DEBUG COMPLETE - CHANNEL WORKING!")
+        log(f"\n✅ SUCCESS! Channel {CHANNEL_ID} is working!")
+        
+        # Save result
+        result = {
+            'status': 'success',
+            'channel_id': CHANNEL_ID,
+            'name': name,
+            'mpd_url': mpd,
+            'timestamp': datetime.now().isoformat()
+        }
+        with open('debug_result.json', 'w', encoding='utf-8') as f:
+            json.dump(result, f, indent=2)
+            
     else:
-        print(f"❌ FAILED! HTTP {response.status_code}")
-        print(f"📄 Response: {response.text[:500]}")
+        log(f"❌ FAILED! HTTP {response.status_code}")
+        log(f"📄 Response: {response.text[:500]}")
+        
+        # Save error
+        result = {
+            'status': 'failed',
+            'channel_id': CHANNEL_ID,
+            'http_code': response.status_code,
+            'response': response.text[:500],
+            'timestamp': datetime.now().isoformat()
+        }
+        with open('debug_result.json', 'w', encoding='utf-8') as f:
+            json.dump(result, f, indent=2)
         
 except Exception as e:
-    print(f"\n❌ EXCEPTION: {e}")
+    log(f"\n❌ EXCEPTION: {e}")
     import traceback
     traceback.print_exc()
+    
+    # Save exception
+    result = {
+        'status': 'error',
+        'channel_id': CHANNEL_ID,
+        'error': str(e),
+        'timestamp': datetime.now().isoformat()
+    }
+    with open('debug_result.json', 'w', encoding='utf-8') as f:
+        json.dump(result, f, indent=2)
 
-print("\n" + "=" * 60)
-print("🔍 DEBUG COMPLETE")
-print("=" * 60)
+log("\n" + "=" * 60)
+log("🔍 DEBUG COMPLETE")
+log(f"📁 Output saved to: {OUTPUT_FILE}")
+log("=" * 60)
+
+# Print summary
+print("\n📊 SUMMARY:")
+print(f"  File: {OUTPUT_FILE}")
+try:
+    with open(OUTPUT_FILE, 'r') as f:
+        print(f"  Size: {len(f.read())} bytes")
+except:
+    print("  Size: 0 bytes")
