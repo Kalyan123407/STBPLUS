@@ -1,13 +1,12 @@
 {
-  "_watermark": "@StreamFlex19",
-  "_project": "StreamFlex JioTV+ Channel Database",
-  "_license_url": "https://yowaimo.in/license/",
-  "_generated_at": "2026-07-08 03:46:30 UTC",
-  "_generated_ts": 1783482390,
-  "_next_refresh": "2026-07-08 09:46:30 UTC",
-  "_status": "complete",
-  "_total_requested": 1106,
-  "_success": 0,
-  "_failed": 1106,
+  "watermark": "@StreamFlex19",
+  "project": "StreamFlex JioTV+ Channel Database",
+  "license_url": "https://yowaimo.in/license/",
+  "generated_at": "2026-07-08 03:48:30 UTC",
+  "generated_ts": 1783482510,
+  "status": "complete",
+  "total_requested": 1106,
+  "success": 0,
+  "failed": 1106,
   "channels": []
 }
